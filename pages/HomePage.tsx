@@ -92,6 +92,13 @@ const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
                            : settings.appFont === 'handwritten' ? 'font-handwritten' 
                            : 'font-sans';
 
+    // Derived calculations (declare before return to avoid reference errors)
+    const netEstimated = netRevenueAfterFees || 0;
+    const feesEstimated = estimatedFees || 0;
+    const totalRev = totalRevenue || 0;
+    const urssafRate = settings.urssafRate ?? 0;
+    const urssafCharge = (totalRev * (urssafRate / 100));
+
     return (
         <div className="flex flex-col h-full space-y-6 justify-center max-w-xl mx-auto w-full">
             
@@ -130,17 +137,17 @@ const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
                      <StatCard 
                         icon={WalletIcon} 
                         title="Net Estimé" 
-                        value={`${netRevenueAfterFees.toFixed(2)}€`}
-                        subValue={<span className="text-slate-500 dark:text-slate-400/80">Dont frais: -{estimatedFees.toFixed(2)}€</span>}
+                        value={`${netEstimated.toFixed(2)}€`}
+                        subValue={<span className="text-slate-500 dark:text-slate-400/80">Dont frais: -{feesEstimated.toFixed(2)}€</span>}
                         color="text-blue-600 dark:text-blue-400"
                     />
-                     <StatCard 
-                        icon={ReceiptPercentIcon}
-                        title="Charges à prévoir (URSSAF)"
-                        value={`${((totalRevenue || 0) * ((settings.urssafRate ?? 0) / 100)).toFixed(2)}€`}
-                        subValue={<span className="text-slate-500 dark:text-slate-400/80">Taux: {(settings.urssafRate ?? 0).toFixed(1)}%</span>}
-                        color="text-orange-600 dark:text-orange-400"
-                     />
+                            <StatCard 
+                                icon={ReceiptPercentIcon}
+                                title="Charges à prévoir (URSSAF)"
+                                value={`${urssafCharge.toFixed(2)}€`}
+                                subValue={<span className="text-slate-500 dark:text-slate-400/80">Taux: {urssafRate.toFixed(1)}%</span>}
+                                color="text-orange-600 dark:text-orange-400"
+                            />
                      <StatCard 
                         icon={ReceiptPercentIcon} 
                         title="Ventes du Jour" 
