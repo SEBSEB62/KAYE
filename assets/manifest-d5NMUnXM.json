@@ -1,0 +1,25 @@
+{
+  "short_name": "KAYÉ",
+  "name": "KAYÉ",
+  "description": "L'outil de gestion complet pour VDI, Artisans et Associations.",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/3m4x0tW/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.ibb.co/L8d5g2x/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#111111",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#111111",
+  "orientation": "portrait-primary"
+}
