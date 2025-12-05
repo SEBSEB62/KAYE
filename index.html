@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KAYÉ - Gestion Simplifiée</title>
+    
+    <!-- PWA & Mobile App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#111111" />
+    <link rel="apple-touch-icon" href="https://i.ibb.co/3m4x0tW/icon-192.png" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: 'var(--primary)',
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary: #2563eb;
+      }
+      body {
+        font-family: 'Nunito', sans-serif;
+        /* Le fond est géré par App.tsx */
+        background-color: #111; 
+        overscroll-behavior: none;
+      }
+      .font-display {
+        font-family: 'Playfair Display', serif;
+      }
+      .font-handwritten {
+        font-family: 'Dancing Script', cursive;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      
+      /* --- GLASSMORPHISM --- */
+      /* Base commune */
+      .glass-panel {
+        @apply backdrop-blur-md shadow-xl transition-all duration-300;
+      }
+
+      /* Mode Clair (Light Mode) */
+      /* Fond blanc très transparent (20%), bordure blanche visible (40%), texte sombre */
+      .glass-panel {
+        background-color: rgba(255, 255, 255, 0.20); 
+        border: 1px solid rgba(255, 255, 255, 0.40); 
+        color: #0f172a; /* Slate 900 */
+      }
+
+      /* Mode Sombre (Dark Mode) */
+      /* Fond noir transparent (40%), bordure fine (10%), texte blanc */
+      .dark .glass-panel {
+        background-color: rgba(0, 0, 0, 0.40); 
+        border: 1px solid rgba(255, 255, 255, 0.10); 
+        color: #f8fafc; /* Slate 50 */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "jspdf": "https://aistudiocdn.com/jspdf@^3.0.3",
+    "jspdf-autotable": "https://aistudiocdn.com/jspdf-autotable@^5.0.2",
+    "recharts": "https://aistudiocdn.com/recharts@^3.2.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.19.0",
+    "vite": "https://aistudiocdn.com/vite@^7.1.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.0.2",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.2.1/",
+    "vitest": "https://aistudiocdn.com/vitest@^3.2.4",
+    "vitest/": "https://aistudiocdn.com/vitest@^3.2.4/",
+    "@testing-library/jest-dom": "https://aistudiocdn.com/@testing-library/jest-dom@^6.8.0",
+    "@testing-library/react": "https://aistudiocdn.com/@testing-library/react@^16.3.0",
+    "url": "https://aistudiocdn.com/url@^0.11.4",
+    "path": "https://aistudiocdn.com/path@^0.12.7"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-[#111] text-[#E0E0E0]">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

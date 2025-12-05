@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Copy of Copy of KAYÉ 2",
+  "description": "Une application moderne de gestion de buvette pour les clubs et événements.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "prompt": ""
+}
