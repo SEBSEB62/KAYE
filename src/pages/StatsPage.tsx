@@ -5,6 +5,7 @@ import { useEventAnalytics, DateRange } from '../../hooks/useEventAnalytics';
 import { ProductMetrics, SubscriptionPlan, Page, SaleRecord } from '../../types';
 import ProductImage from '../../components/ProductImage';
 import { ArrowTrendingUpIcon, ChartBarIcon, LockClosedIcon, WalletIcon, ArrowDownTrayIcon, TrashIcon } from '../../components/Icons';
+import { formatCurrency } from '../../utils/formatting';
 import jsPDF from 'jspdf';
 import ConfirmModal from '../../components/ConfirmModal';
 import autoTable from 'jspdf-autotable';
@@ -47,11 +48,11 @@ const ProductRank: React.FC<{ product: ProductMetrics, rank: number, metric: 'pr
         </div>
         <div className="flex-grow overflow-hidden">
             <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{product.name}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{`CA: ${product.revenue.toFixed(2)}€`}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{`CA: ${formatCurrency(product.revenue)}`}</p>
         </div>
         <div className="text-right flex-shrink-0 w-24">
             <p className={`font-bold text-lg ${metric === 'profit' ? 'text-emerald-600 dark:text-emerald-400' : 'text-sky-600 dark:text-sky-300'}`}>
-                {metric === 'profit' ? `${product.totalProfit.toFixed(2)}€` : `${product.unitsSold}`}
+                {metric === 'profit' ? `${formatCurrency(product.totalProfit)}` : `${product.unitsSold}`}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
                 {metric === 'profit' ? 'Profit' : 'Vendus'}
@@ -104,7 +105,7 @@ const HistoryList: React.FC<{ sales: SaleRecord[]; onDelete: (sale: SaleRecord) 
                 <div key={sale.id} className="glass-panel p-3 rounded-xl flex items-center justify-between">
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{sale.total.toFixed(2)}€</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{formatCurrency(sale.total)}</span>
                             <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 capitalize">
                                 {sale.paymentMethod}
                             </span>
@@ -138,7 +139,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 <p className="font-bold text-blue-600 dark:text-blue-300">{`${label}`}</p>
                 {payload.map((pld: any) => (
                     <p key={pld.dataKey} style={{ color: pld.color }}>
-                        {`${pld.name}: ${pld.value.toFixed(2)}€`}
+                        {`${pld.name}: ${formatCurrency(pld.value)}`}
                     </p>
                 ))}
             </div>
@@ -282,10 +283,10 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
             const panierMoyen = nombreDeVentes > 0 ? caGlobal / nombreDeVentes : 0;
             const beneficeNet = analytics.beneficeNet;
 
-            drawKPI(margin, "Bénéfice Net", `${beneficeNet.toFixed(2)} €`, colEmerald);
-            drawKPI(margin + boxWidth + 5, "C.A. Total", `${caGlobal.toFixed(2)} €`, colBlue);
+            drawKPI(margin, "Bénéfice Net", `${formatCurrency(beneficeNet)}`, colEmerald);
+            drawKPI(margin + boxWidth + 5, "C.A. Total", `${formatCurrency(caGlobal)}`, colBlue);
             drawKPI(margin + (boxWidth * 2) + 10, "Nb. Ventes", `${nombreDeVentes}`, colMidnight);
-            drawKPI(margin + (boxWidth * 3) + 15, "Panier Moyen", `${panierMoyen.toFixed(2)} €`, [107, 114, 128]);
+            drawKPI(margin + (boxWidth * 3) + 15, "Panier Moyen", `${formatCurrency(panierMoyen)}`, [107, 114, 128]);
 
             yPos += boxHeight + 15;
 
@@ -309,7 +310,7 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
             autoTable(doc, {
                 startY: yPos,
                 head: [['Moyen', 'Nb Ventes', 'Total Encaissé', 'Frais Estimés', 'Net Perçu']],
-                body: methodRows.map(m => [m.name, m.count.toString(), `${m.total.toFixed(2)} €`, m.fee > 0 ? `-${m.fee.toFixed(2)} €` : '-', `${(m.total - m.fee).toFixed(2)} €`]),
+                body: methodRows.map(m => [m.name, m.count.toString(), `${formatCurrency(m.total)}`, m.fee > 0 ? `-${formatCurrency(m.fee)}` : '-', `${formatCurrency(m.total - m.fee)}`]),
                 theme: 'grid',
                 headStyles: { fillColor: colMidnight, textColor: [255, 255, 255], fontStyle: 'bold' },
                 columnStyles: { 0: { fontStyle: 'bold' }, 2: { halign: 'right' }, 3: { halign: 'right', textColor: colRed }, 4: { halign: 'right', textColor: colEmerald, fontStyle: 'bold' } },
@@ -318,15 +319,15 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
             
             // --- 4. TABLEAUX CÔTE À CÔTE : DONS ET COÛTS ---
             const donsBody = [
-                ['Dons reçus', `${analytics.totalDonations.toFixed(2)} €`],
+                ['Dons reçus', `${formatCurrency(analytics.totalDonations)}`],
                 ['Nombre de dons', donations.filter(d => dateRange ? new Date(d.date) >= dateRange.start && new Date(d.date) <= dateRange.end : true).length.toString()]
             ];
             const coutsBody = [
-                ['Coût des marchandises', `-${analytics.totalCostOfGoods.toFixed(2)} €`],
-                ['Frais SumUp (Carte)', `-${sumupFees.toFixed(2)} €`],
-                ['Frais PayPal', `-${paypalFees.toFixed(2)} €`],
-                ['Remboursements', `-${analytics.totalRemboursements.toFixed(2)} €`],
-                ['Sorties de caisse', `-${analytics.totalCashOuts.toFixed(2)} €`],
+                ['Coût des marchandises', `-${formatCurrency(analytics.totalCostOfGoods)}`],
+                ['Frais SumUp (Carte)', `-${formatCurrency(sumupFees)}`],
+                ['Frais PayPal', `-${formatCurrency(paypalFees)}`],
+                ['Remboursements', `-${formatCurrency(analytics.totalRemboursements)}`],
+                ['Sorties de caisse', `-${formatCurrency(analytics.totalCashOuts)}`],
             ];
             
             doc.setFontSize(14); doc.setTextColor(colTextTitle[0], colTextTitle[1], colTextTitle[2]);
@@ -354,7 +355,7 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
                 const cogs = sale.items.reduce((sum, i) => sum + (i.purchasePrice || 0) * i.quantity, 0);
                 const profit = sale.total - fee - cogs;
 
-                return [time, summary, sale.paymentMethod.toUpperCase(), `${sale.total.toFixed(2)} €`, fee > 0 ? `-${fee.toFixed(2)}` : '-', `${profit.toFixed(2)} €`];
+                return [time, summary, sale.paymentMethod.toUpperCase(), `${formatCurrency(sale.total)}`, fee > 0 ? `-${formatCurrency(fee)}` : '-', `${formatCurrency(profit)}`];
             });
 
             autoTable(doc, {
@@ -432,19 +433,19 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <StatCard 
                         title="Total Encaissé" 
-                        value={`${analytics.totalEncaissements.toFixed(2)}€`} 
+                        value={`${formatCurrency(analytics.totalEncaissements)}`} 
                         icon={ArrowTrendingUpIcon} 
                         color="text-emerald-600 dark:text-emerald-400" 
                     />
                     <StatCard 
                         title="Net en Banque (Est.)" 
-                        value={`${analytics.netRevenueAfterFees.toFixed(2)}€`} 
+                        value={`${formatCurrency(analytics.netRevenueAfterFees)}`} 
                         icon={WalletIcon} 
                         color="text-blue-600 dark:text-blue-400" 
-                        subtext={<span className="text-red-500 dark:text-red-300">Dont frais bancaires: -{analytics.estimatedFees.toFixed(2)}€</span>}
+                        subtext={<span className="text-red-500 dark:text-red-300">Dont frais bancaires: -{formatCurrency(analytics.estimatedFees)}</span>}
                     />
                     {isPro && (
-                        <StatCard title="Bénéfice Net" value={`${analytics.beneficeNet.toFixed(2)}€`} icon={WalletIcon} color="text-amber-500 dark:text-amber-400" />
+                        <StatCard title="Bénéfice Net" value={`${formatCurrency(analytics.beneficeNet)}`} icon={WalletIcon} color="text-amber-500 dark:text-amber-400" />
                     )}
                  </div>
             </section>
@@ -526,14 +527,14 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
                 </div>
              </section>
              
-             <ConfirmModal
-                isOpen={!!saleToDelete}
-                onClose={() => setSaleToDelete(null)}
-                onConfirm={confirmDeleteSale}
-                title="Annuler la Vente"
-                message={<>Attention, vous allez supprimer définitivement cette vente de <strong>{saleToDelete?.total.toFixed(2)}€</strong>.<br/><br/>Le stock des produits sera automatiquement remis à jour.</>}
-                confirmText="Supprimer & Restaurer Stock"
-             />
+                 <ConfirmModal
+                     isOpen={!!saleToDelete}
+                     onClose={() => setSaleToDelete(null)}
+                     onConfirm={confirmDeleteSale}
+                     title="Annuler la Vente"
+                     message={<>Attention, vous allez supprimer définitivement cette vente de <strong>{formatCurrency(saleToDelete?.total ?? 0)}</strong>.<br/><br/>Le stock des produits sera automatiquement remis à jour.</>}
+                     confirmText="Supprimer & Restaurer Stock"
+                 />
         </div>
     );
 };

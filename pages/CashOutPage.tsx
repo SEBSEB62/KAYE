@@ -5,6 +5,7 @@ import NumericKeypad from '../components/NumericKeypad';
 import { PhotoIcon, ArrowUturnLeftIcon } from '../components/Icons';
 import { compressImage } from '../utils/image';
 import ProductImage from '../components/ProductImage';
+import { formatCurrency } from '../utils/formatting';
 
 interface CashOutPageProps {
   setPage: (page: Page) => void;
@@ -113,7 +114,7 @@ const CashOutPage: React.FC<CashOutPageProps> = ({ setPage }) => {
             
             <div className="bg-[#2a2a2a] border-2 border-amber-500/50 p-6 rounded-2xl shadow-lg text-center">
                 <h3 className="font-bold text-xl text-slate-200">Total des Sorties d'Espèces</h3>
-                <p className="text-4xl font-display text-amber-300 tracking-wider mt-1">{totalCashOuts.toFixed(2)}€</p>
+                <p className="text-4xl font-display text-amber-300 tracking-wider mt-1">{formatCurrency(totalCashOuts)}</p>
             </div>
 
             <div className="bg-[#2a2a2a] p-6 rounded-2xl shadow-md border border-white/10">
@@ -165,7 +166,7 @@ const CashOutPage: React.FC<CashOutPageProps> = ({ setPage }) => {
                                 <p className="font-bold text-slate-200">{co.reason}</p>
                                 <p className="text-xs text-slate-400">{new Date(co.date).toLocaleString('fr-FR')}</p>
                             </div>
-                            <p className="font-bold text-lg text-red-400">-{co.amount.toFixed(2)}€</p>
+                            <p className="font-bold text-lg text-red-400">-{formatCurrency(co.amount)}</p>
                         </div>
                     )) : (
                         <p className="text-center text-slate-500 p-4">Aucune sortie d'espèces enregistrée.</p>

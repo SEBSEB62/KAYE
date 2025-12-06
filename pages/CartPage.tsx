@@ -10,6 +10,7 @@ import autoTable from 'jspdf-autotable';
 import { BanknotesIcon, CreditCardIcon, UserCircleIcon, DocumentTextIcon, QrCodeIcon } from '../components/Icons';
 import ProductImage from '../components/ProductImage';
 import { blobToDataURL } from '../utils/image';
+import { formatCurrency } from '../utils/formatting';
 
 interface CartPageProps {
   setPage: (page: Page) => void;
@@ -33,15 +34,15 @@ const SuccessScreen: React.FC<SuccessScreenProps> = memo(({ transaction, onNewSa
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
-            <h1 className="text-4xl font-display text-amber-400 mt-4">Vente de {sale.total.toFixed(2)}€ Complète !</h1>
+            <h1 className="text-4xl font-display text-amber-400 mt-4">Vente de {formatCurrency(sale.total)} Complète !</h1>
             {sale.customerName && <p className="text-slate-300 mt-2 text-lg">Client: {sale.customerName}</p>}
             {sale.paymentMethod === 'cash' && cashReceived !== undefined && (
                 <div className="mt-4 text-center p-4 bg-emerald-900/50 rounded-lg border border-emerald-700 w-full max-w-xs space-y-2">
-                    <p className="text-sm text-slate-400">Montant reçu : {cashReceived.toFixed(2)}€</p>
+                    <p className="text-sm text-slate-400">Montant reçu : {formatCurrency(Number(cashReceived))}</p>
                     {changeToRender >= 0 && (
                         <div>
                             <p className="text-xl text-emerald-300">Monnaie à rendre :</p>
-                            <p className="text-4xl font-display text-emerald-200">{changeToRender.toFixed(2)}€</p>
+                            <p className="text-4xl font-display text-emerald-200">{formatCurrency(changeToRender)}</p>
                         </div>
                     )}
                 </div>
@@ -232,13 +233,21 @@ const CartPage: React.FC<CartPageProps> = ({ setPage }) => {
     sale.items.forEach(item => {
         const price = settings.tokenMode ? item.tokenPrice || 0 : item.price;
         const total = price * item.quantity;
-        const priceUnit = settings.tokenMode ? ' J' : '€';
-        tableRows.push([
+        if (settings.tokenMode) {
+          tableRows.push([
             item.name,
             item.quantity,
-            `${price.toFixed(settings.tokenMode ? 0 : 2)}${priceUnit}`,
-            `${total.toFixed(settings.tokenMode ? 0 : 2)}${priceUnit}`,
-        ]);
+            `${price.toFixed(0)} J`,
+            `${total.toFixed(0)} J`,
+          ]);
+        } else {
+          tableRows.push([
+            item.name,
+            item.quantity,
+            `${formatCurrency(price)}`,
+            `${formatCurrency(total)}`,
+          ]);
+        }
     });
 
     autoTable(doc, {
@@ -264,7 +273,7 @@ const CartPage: React.FC<CartPageProps> = ({ setPage }) => {
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    const totalLabel = settings.tokenMode ? `${sale.total} Jeton${sale.total > 1 ? 's' : ''}` : `${sale.total.toFixed(2)}€`;
+    const totalLabel = settings.tokenMode ? `${sale.total} Jeton${sale.total > 1 ? 's' : ''}` : `${formatCurrency(sale.total)}`;
     const totalText = `TOTAL : ${totalLabel}`;
     doc.text(totalText, pageWidth - margin, finalY + 15, { align: 'right' });
 
@@ -386,7 +395,7 @@ const CartPage: React.FC<CartPageProps> = ({ setPage }) => {
               </div>
               <div>
                 <p className="font-bold text-slate-800 dark:text-slate-200">{item.name}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{settings.tokenMode ? `${item.tokenPrice || 0} Jeton(s)` : `${item.price.toFixed(2)}€`}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{settings.tokenMode ? `${item.tokenPrice || 0} Jeton(s)` : `${formatCurrency(item.price)}`}</p>
               </div>
             </div>
             <button 
@@ -408,19 +417,19 @@ const CartPage: React.FC<CartPageProps> = ({ setPage }) => {
           <span className="text-2xl font-display text-slate-800 dark:text-slate-200">Total:</span>
           {settings.tokenMode ? (
               <span className="text-3xl font-display text-amber-600 dark:text-amber-300">{cartTokenTotal} Jeton{cartTokenTotal > 1 ? 's' : ''}</span>
-          ) : (
-             <span className="text-3xl font-display text-amber-600 dark:text-amber-300">{cartTotal.toFixed(2)}€</span>
-          )}
+           ) : (
+             <span className="text-3xl font-display text-amber-600 dark:text-amber-300">{formatCurrency(cartTotal)}</span>
+           )}
         </div>
         {!settings.tokenMode && (
             <div className="mt-3 pt-3 border-t border-slate-300/20 dark:border-white/10 text-xs space-y-1">
                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
                     <span>Net si paiement CB (SumUp) :</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{sumUpNet.toFixed(2)}€</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(sumUpNet)}</span>
                 </div>
                  <div className="flex justify-between text-slate-600 dark:text-slate-400">
                     <span>Net si paiement PayPal :</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{paypalNet.toFixed(2)}€</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(paypalNet)}</span>
                 </div>
             </div>
         )}
@@ -478,7 +487,7 @@ const CartPage: React.FC<CartPageProps> = ({ setPage }) => {
 
       <Modal isOpen={isCashModalOpen} onClose={() => { setCashModalOpen(false); setKeypadVisible(false); }} title="Paiement Espèces">
         <div className="space-y-4">
-            <p className="text-center text-lg text-slate-200">Total à payer: <span className="font-bold text-2xl font-display text-amber-400">{cartTotal.toFixed(2)}€</span></p>
+            <p className="text-center text-lg text-slate-200">Total à payer: <span className="font-bold text-2xl font-display text-amber-400">{formatCurrency(cartTotal)}</span></p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button onClick={() => setCashReceived(cartTotal.toFixed(2))} className="py-2 px-3 text-sm font-bold bg-white/10 rounded-lg hover:bg-white/20 transition-colors">Exact</button>
                 {suggestedAmounts.map(amount => (
@@ -500,7 +509,7 @@ const CartPage: React.FC<CartPageProps> = ({ setPage }) => {
             {cashReceived && change >= 0 && (
                 <div className="text-center p-3 bg-emerald-900/50 rounded-lg border border-emerald-700">
                     <p className="text-lg text-emerald-300">Monnaie à rendre:</p>
-                    <p className="text-3xl font-display text-emerald-300">{change.toFixed(2)}€</p>
+                    <p className="text-3xl font-display text-emerald-300">{formatCurrency(change)}</p>
                 </div>
             )}
              {cashReceived && change < 0 && (

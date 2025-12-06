@@ -4,6 +4,7 @@ import { useBuvette } from '../hooks/useBuvette';
 import { useEventAnalytics, DateRange } from '../hooks/useEventAnalytics';
 import { ProductMetrics, SubscriptionPlan, Page, SaleRecord } from '../types';
 import ProductImage from '../components/ProductImage';
+import { formatCurrency, formatPercentage } from '../utils/formatting';
 import { ArrowTrendingUpIcon, ChartBarIcon, LockClosedIcon, WalletIcon, ArrowDownTrayIcon, TrashIcon } from '../components/Icons';
 import jsPDF from 'jspdf';
 import ConfirmModal from '../components/ConfirmModal';
@@ -46,11 +47,11 @@ const ProductRank: React.FC<{ product: ProductMetrics, rank: number, metric: 'pr
         </div>
         <div className="flex-grow overflow-hidden">
             <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{product.name}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{`CA: ${product.revenue.toFixed(2)}€`}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{`CA: ${formatCurrency(product.revenue)}`}</p>
         </div>
         <div className="text-right flex-shrink-0 w-24">
             <p className={`font-bold text-lg ${metric === 'profit' ? 'text-emerald-600 dark:text-emerald-400' : 'text-sky-600 dark:text-sky-300'}`}>
-                {metric === 'profit' ? `${product.totalProfit.toFixed(2)}€` : `${product.unitsSold}`}
+                {metric === 'profit' ? `${formatCurrency(product.totalProfit)}` : `${product.unitsSold}`}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
                 {metric === 'profit' ? 'Profit' : 'Vendus'}
@@ -103,7 +104,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 <p className="font-bold text-blue-600 dark:text-blue-300">{`${label}`}</p>
                 {payload.map((pld: any) => (
                     <p key={pld.dataKey} style={{ color: pld.color }}>
-                        {`${pld.name}: ${pld.value.toFixed(2)}€`}
+                        {`${pld.name}: ${formatCurrency(pld.value)}`}
                     </p>
                 ))}
             </div>
@@ -145,12 +146,12 @@ const HistoryList: React.FC<{ sales: SaleRecord[]; onDelete: (sale: SaleRecord) 
                         >
                             <div className="flex-grow">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-bold text-slate-800 dark:text-slate-200 text-lg">{sale.total.toFixed(2)}€</span>
+                                    <span className="font-bold text-slate-800 dark:text-slate-200 text-lg">{formatCurrency(sale.total)}</span>
                                     <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 capitalize font-semibold">
                                         {sale.paymentMethod}
                                     </span>
                                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${netProfit >= 0 ? 'bg-green-500/20 text-green-700 dark:text-green-300' : 'bg-red-500/20 text-red-700 dark:text-red-300'}`}>
-                                        Profit: {netProfit.toFixed(2)}€
+                                        Profit: {formatCurrency(netProfit)}
                                     </span>
                                 </div>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -182,28 +183,28 @@ const HistoryList: React.FC<{ sales: SaleRecord[]; onDelete: (sale: SaleRecord) 
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                                     <div>
                                         <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Marge Brute</p>
-                                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{grossProfit.toFixed(2)}€</p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">({marginPercentage.toFixed(1)}%)</p>
+                                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{formatCurrency(grossProfit)}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">({formatPercentage(marginPercentage)})</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Frais</p>
-                                        <p className="text-lg font-bold text-red-600 dark:text-red-400">-{totalFees.toFixed(2)}€</p>
+                                        <p className="text-lg font-bold text-red-600 dark:text-red-400">-{formatCurrency(totalFees)}</p>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            {sale.paymentMethod === 'paypal' && `PayPal: ${paypalFeeForSale.toFixed(2)}€`}
-                                            {sale.paymentMethod === 'card' && `Sumup: ${sumupFeeForSale.toFixed(2)}€`}
+                                            {sale.paymentMethod === 'paypal' && `PayPal: ${formatCurrency(paypalFeeForSale)}`}
+                                            {sale.paymentMethod === 'card' && `Sumup: ${formatCurrency(sumupFeeForSale)}`}
                                             {!['paypal', 'card'].includes(sale.paymentMethod) && 'Sans frais'}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Profit Net</p>
                                         <p className={`text-lg font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                            {netProfit.toFixed(2)}€
+                                            {formatCurrency(netProfit)}
                                         </p>
                                     </div>
                                     {sale.items.length > 0 && (
                                         <div>
                                             <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Coût Marchandises</p>
-                                            <p className="text-lg font-bold text-slate-600 dark:text-slate-300">{cogs.toFixed(2)}€</p>
+                                            <p className="text-lg font-bold text-slate-600 dark:text-slate-300">{formatCurrency(cogs)}</p>
                                         </div>
                                     )}
                                     <div>
@@ -220,7 +221,7 @@ const HistoryList: React.FC<{ sales: SaleRecord[]; onDelete: (sale: SaleRecord) 
                                             return (
                                                 <div key={idx} className="text-xs bg-white/50 dark:bg-black/20 p-2 rounded flex justify-between">
                                                     <span className="font-semibold">{item.quantity}x {item.name}</span>
-                                                    <span>{(item.price * item.quantity).toFixed(2)}€ (Profit: {itemGrossProfit.toFixed(2)}€)</span>
+                                                    <span>{formatCurrency(item.price * item.quantity)} (Profit: {formatCurrency(itemGrossProfit)})</span>
                                                 </div>
                                             );
                                         })}
@@ -280,6 +281,25 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
     }, [analytics.topProductsByQuantity, topProductsCategory]);
 
     const categoriesForFilter: string[] = ['all', ...settings.categories];
+
+    // Derived values (guarded with useMemo to avoid referencing analytics fields before ready)
+    const { totalEncaissements, netRevenueAfterFees, estimatedFees, beneficeNet } = useMemo(() => {
+        if (!analytics) {
+            return {
+                totalEncaissements: 0,
+                netRevenueAfterFees: 0,
+                estimatedFees: 0,
+                beneficeNet: 0,
+            };
+        }
+
+        return {
+            totalEncaissements: analytics.totalEncaissements ?? 0,
+            netRevenueAfterFees: analytics.netRevenueAfterFees ?? 0,
+            estimatedFees: analytics.estimatedFees ?? 0,
+            beneficeNet: analytics.beneficeNet ?? 0,
+        };
+    }, [analytics]);
 
     const handleUpgrade = () => setPage(Page.Upgrade);
     
@@ -369,19 +389,19 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <StatCard 
                         title="Total Encaissé" 
-                        value={`${analytics.totalEncaissements.toFixed(2)}€`} 
+                        value={formatCurrency(totalEncaissements)} 
                         icon={ArrowTrendingUpIcon} 
                         color="text-emerald-600 dark:text-emerald-400" 
                     />
                     <StatCard 
                         title="Net en Banque (Est.)" 
-                        value={`${analytics.netRevenueAfterFees.toFixed(2)}€`} 
+                        value={formatCurrency(netRevenueAfterFees)} 
                         icon={WalletIcon} 
                         color="text-blue-600 dark:text-blue-400" 
-                        subtext={<span className="text-red-500 dark:text-red-300">Dont frais bancaires (1.75%): -{analytics.estimatedFees.toFixed(2)}€</span>}
+                        subtext={<span className="text-red-500 dark:text-red-300">Dont frais bancaires (1.75%): -{formatCurrency(estimatedFees)}</span>}
                     />
                     {isPro && (
-                        <StatCard title="Bénéfice Net" value={`${analytics.beneficeNet.toFixed(2)}€`} icon={WalletIcon} color="text-amber-500 dark:text-amber-400" />
+                        <StatCard title="Bénéfice Net" value={formatCurrency(beneficeNet)} icon={WalletIcon} color="text-amber-500 dark:text-amber-400" />
                     )}
                  </div>
             </section>
@@ -468,7 +488,7 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
                 onClose={() => setSaleToDelete(null)}
                 onConfirm={confirmDeleteSale}
                 title="Annuler la Vente"
-                message={<>Attention, vous allez supprimer définitivement cette vente de <strong>{saleToDelete?.total.toFixed(2)}€</strong>.<br/><br/>Le stock des produits sera automatiquement remis à jour.</>}
+                message={<>Attention, vous allez supprimer définitivement cette vente de <strong>{saleToDelete ? formatCurrency(saleToDelete.total) : ''}</strong>.<br/><br/>Le stock des produits sera automatiquement remis à jour.</>}
                 confirmText="Supprimer & Restaurer Stock"
              />
         </div>

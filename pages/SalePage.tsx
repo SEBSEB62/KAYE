@@ -6,6 +6,7 @@ import { SearchIcon, TagIcon } from '../components/Icons';
 import Modal from '../components/Modal';
 import NumericKeypad from '../components/NumericKeypad';
 import ProductImage from '../components/ProductImage';
+import { formatCurrency } from '../utils/formatting';
 import { useDebounce } from '../hooks/useDebounce';
 
 const MAX_CAROUSEL_ITEMS = 30;
@@ -96,8 +97,8 @@ const MiscSaleModal: React.FC<{ isOpen: boolean; onClose: () => void }> = memo((
                     />
                      {currentAmount > 0 && (
                         <div className="mt-2 text-xs space-y-1 text-center text-slate-500 dark:text-slate-400 bg-black/10 dark:bg-black/30 p-2 rounded-lg">
-                            <p>Net (SumUp): <span className="font-bold text-emerald-600 dark:text-emerald-400">{sumUpNet.toFixed(2)}€</span></p>
-                            <p>Net (PayPal): <span className="font-bold text-emerald-600 dark:text-emerald-400">{Math.max(0, paypalNet).toFixed(2)}€</span></p>
+                            <p>Net (SumUp): <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(sumUpNet)}</span></p>
+                            <p>Net (PayPal): <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(Math.max(0, paypalNet))}</span></p>
                         </div>
                     )}
                 </div>
@@ -121,9 +122,9 @@ const ProductCard: React.FC<{
   const { settings } = useBuvette();
   const hasStock = product.stock > 0;
 
-  const priceDisplay = settings.tokenMode 
+    const priceDisplay = settings.tokenMode 
     ? `${product.tokenPrice || 0} Jeton${(product.tokenPrice || 0) > 1 ? 's' : ''}`
-    : `${product.price.toFixed(2)}€`;
+    : `${formatCurrency(product.price)}`;
 
   return (
     <button
@@ -184,7 +185,7 @@ const ProductGridItem: React.FC<{ product: Product }> = memo(({ product }) => {
 
     const priceDisplay = settings.tokenMode
         ? `${product.tokenPrice || 0} Jeton${(product.tokenPrice || 0) > 1 ? 's' : ''}`
-        : `${product.price.toFixed(2)}€`;
+        : `${formatCurrency(product.price)}`;
 
     return (
         <button

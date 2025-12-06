@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { useBuvette } from '../hooks/useBuvette';
 import { useEventAnalytics } from '../hooks/useEventAnalytics';
 import { Page, Product } from '../types';
+import { formatCurrency, formatPercentage } from '../utils/formatting';
 import { ArrowTrendingUpIcon, ReceiptPercentIcon, WalletIcon } from '../components/Icons';
 import ProductImage from '../components/ProductImage';
 
@@ -131,21 +132,21 @@ const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
                     <StatCard 
                         icon={ArrowTrendingUpIcon} 
                         title="C.A. du Jour" 
-                        value={`${todayStats.revenue.toFixed(2)}€`} 
+                        value={`${formatCurrency(todayStats.revenue)}`} 
                         color="text-emerald-600 dark:text-emerald-400"
                     />
                      <StatCard 
                         icon={WalletIcon} 
                         title="Net Estimé" 
-                        value={`${netEstimated.toFixed(2)}€`}
-                        subValue={<span className="text-slate-500 dark:text-slate-400/80">Dont frais: -{feesEstimated.toFixed(2)}€</span>}
+                        value={`${formatCurrency(netEstimated)}`}
+                        subValue={<span className="text-slate-500 dark:text-slate-400/80">Dont frais: -{formatCurrency(feesEstimated)}</span>}
                         color="text-blue-600 dark:text-blue-400"
                     />
                             <StatCard 
                                 icon={ReceiptPercentIcon}
                                 title="Charges à prévoir (URSSAF)"
-                                value={`${urssafCharge.toFixed(2)}€`}
-                                subValue={<span className="text-slate-500 dark:text-slate-400/80">Taux: {urssafRate.toFixed(1)}%</span>}
+                                value={`${formatCurrency(urssafCharge)}`}
+                                subValue={<span className="text-slate-500 dark:text-slate-400/80">Taux: {formatPercentage(urssafRate)}</span>}
                                 color="text-orange-600 dark:text-orange-400"
                             />
                      <StatCard 

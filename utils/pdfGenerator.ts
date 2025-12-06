@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Settings, SaleRecord, Product } from '../types';
 import { blobToDataURL } from './image';
+import { formatCurrency, formatPercentage } from './formatting';
 
 interface PDFPaymentStats {
     cash: number;
@@ -118,6 +119,29 @@ export const generateAdvancedPDF = async (
 
     finalY += 25;
 
+    // Safe numeric values (guard analytics to avoid runtime errors)
+    const totalRevenue = analytics?.totalRevenue ?? 0;
+    const totalDonations = analytics?.totalDonations ?? 0;
+    const estimatedFees = analytics?.estimatedFees ?? 0;
+    const netRevenueAfterFees = analytics?.netRevenueAfterFees ?? 0;
+    const beneficeNet = analytics?.beneficeNet ?? 0;
+    const totalCostOfGoods = analytics?.totalCostOfGoods ?? 0;
+    const grossProfit = analytics?.grossProfit ?? 0;
+    const cashSales = analytics?.cashSales ?? 0;
+    const cardSales = analytics?.cardSales ?? 0;
+    const paypalSales = analytics?.paypalSales ?? 0;
+    const checkSales = analytics?.checkSales ?? 0;
+    const weroSales = analytics?.weroSales ?? 0;
+    const totalRemboursements = analytics?.totalRemboursements ?? 0;
+    const totalCashOuts = analytics?.totalCashOuts ?? 0;
+    const caisseFinaleEspeces = analytics?.caisseFinaleEspeces ?? 0;
+    const totalEncaissements = analytics?.totalEncaissements ?? 0;
+    const validSales = analytics?.validSales ?? [];
+    const topProductsByQuantity = analytics?.topProductsByQuantity ?? [];
+    const topProductsByProfit = analytics?.topProductsByProfit ?? [];
+    const salesByCategory = analytics?.salesByCategory ?? [];
+    // paymentStats intentionally not used here — analytics payment breakdown is covered by dedicated fields
+
     // --- SECTION 1: KPI CARDS ---
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
@@ -128,10 +152,10 @@ export const generateAdvancedPDF = async (
 
     // KPI Cards
     const kpiData = [
-        { label: 'Chiffre d\'Affaires', value: `${analytics.totalRevenue.toFixed(2)}€`, color: colors.primary },
-        { label: 'Net Estimé', value: `${analytics.netRevenueAfterFees.toFixed(2)}€`, color: colors.success },
-        { label: 'Frais Bancaires', value: `-${analytics.estimatedFees.toFixed(2)}€`, color: colors.danger },
-        ...(isPro ? [{ label: 'Bénéfice Net', value: `${analytics.beneficeNet.toFixed(2)}€`, color: colors.warning }] : []),
+        { label: 'Chiffre d\'Affaires', value: formatCurrency(totalRevenue), color: colors.primary },
+        { label: 'Net Estimé', value: formatCurrency(netRevenueAfterFees), color: colors.success },
+        { label: 'Frais Bancaires', value: `-${formatCurrency(estimatedFees)}`, color: colors.danger },
+        ...(isPro ? [{ label: 'Bénéfice Net', value: formatCurrency(beneficeNet), color: colors.warning }] : []),
     ];
 
     const kpiWidth = (pageWidth - margin * 2) / Math.min(kpiData.length, 4);
@@ -160,21 +184,21 @@ export const generateAdvancedPDF = async (
     finalY += 6;
 
     const summaryBody: string[][] = [
-        ['Chiffre d\'Affaires Total', `${analytics.totalRevenue.toFixed(2)}€`, 'CA'],
-        ['Total des Dons', `${analytics.totalDonations.toFixed(2)}€`, 'Dons'],
-        ['Total Encaissé', `${analytics.totalEncaissements.toFixed(2)}€`, 'Trésorerie'],
-        ['Frais Bancaires (Est.)', `-${analytics.estimatedFees.toFixed(2)}€`, 'Frais'],
-        ['Net Estimé (après frais)', `${analytics.netRevenueAfterFees.toFixed(2)}€`, 'Net'],
+        ['Chiffre d\'Affaires Total', `${formatCurrency(totalRevenue)}`, 'CA'],
+        ['Total des Dons', `${formatCurrency(totalDonations)}`, 'Dons'],
+        ['Total Encaissé', `${formatCurrency(totalEncaissements)}`, 'Trésorerie'],
+        ['Frais Bancaires (Est.)', `-${formatCurrency(estimatedFees)}`, 'Frais'],
+        ['Net Estimé (après frais)', `${formatCurrency(netRevenueAfterFees)}`, 'Net'],
     ];
 
     if (isPro) {
         summaryBody.push(
-            ['Coût des Marchandises', `-${analytics.totalCostOfGoods.toFixed(2)}€`, 'COGS'],
-            ['Marge Brute', `${analytics.grossProfit.toFixed(2)}€`, 'Marge'],
-            ['Bénéfice Net', `${analytics.beneficeNet.toFixed(2)}€`, 'Profit'],
-            ['Remboursements', `-${analytics.totalRemboursements.toFixed(2)}€`, 'Refunds'],
-            ['Sorties d\'Espèces', `-${analytics.totalCashOuts.toFixed(2)}€`, 'Cash Out'],
-            ['Caisse Finale (Espèces)', `${analytics.caisseFinaleEspeces.toFixed(2)}€`, 'Caisse'],
+            ['Coût des Marchandises', `-${formatCurrency(totalCostOfGoods)}`, 'COGS'],
+            ['Marge Brute', `${formatCurrency(grossProfit)}`, 'Marge'],
+            ['Bénéfice Net', `${formatCurrency(beneficeNet)}`, 'Profit'],
+            ['Remboursements', `-${formatCurrency(totalRemboursements)}`, 'Refunds'],
+            ['Sorties d\'Espèces', `-${formatCurrency(totalCashOuts)}`, 'Cash Out'],
+            ['Caisse Finale (Espèces)', `${formatCurrency(caisseFinaleEspeces)}`, 'Caisse'],
         );
     }
 
@@ -200,18 +224,21 @@ export const generateAdvancedPDF = async (
     finalY += 6;
 
     const paymentMethods = [
-        { label: 'Espèces', amount: analytics.cashSales, color: colors.success },
-        { label: 'Carte Bancaire', amount: analytics.cardSales, color: colors.primary },
-        { label: 'PayPal', amount: analytics.paypalSales, color: colors.cyan },
-        { label: 'Chèque', amount: analytics.checkSales, color: colors.purple },
-        { label: 'Wero', amount: analytics.weroSales, color: colors.warning },
-    ].filter(m => m.amount > 0);
+        { label: 'Espèces', amount: cashSales, color: colors.success },
+        { label: 'Carte Bancaire', amount: cardSales, color: colors.primary },
+        { label: 'PayPal', amount: paypalSales, color: colors.cyan },
+        { label: 'Chèque', amount: checkSales, color: colors.purple },
+        { label: 'Wero', amount: weroSales, color: colors.warning },
+    ].filter(m => (m.amount ?? 0) > 0);
 
-    const paymentBody = paymentMethods.map(method => [
-        method.label,
-        `${method.amount.toFixed(2)}€`,
-        `${((method.amount / analytics.totalEncaissements) * 100).toFixed(1)}%`,
-    ]);
+    const paymentBody = paymentMethods.map(method => {
+        const pct = totalEncaissements > 0 ? ((method.amount / totalEncaissements) * 100) : 0;
+        return [
+            method.label,
+            `${formatCurrency(method.amount)}`,
+            `${formatPercentage(pct)}`,
+        ];
+    });
 
     autoTable(doc, {
         startY: finalY + 2,
@@ -235,14 +262,14 @@ export const generateAdvancedPDF = async (
         doc.text('Analyse Détaillée des Frais', margin, finalY);
         finalY += 6;
 
-        const paypalSalesCount = analytics.validSales.filter(s => s.paymentMethod === 'paypal').length;
-        const paypalFees = analytics.paypalSales > 0 ? (analytics.paypalSales * 0.029) + (paypalSalesCount * 0.35) : 0;
-        const sumupFees = (analytics.cardSales + analytics.totalDonations) * 0.0175;
+        const paypalSalesCount = validSales.filter((s: SaleRecord) => s.paymentMethod === 'paypal').length;
+        const paypalFees = paypalSales > 0 ? (paypalSales * 0.029) + (paypalSalesCount * 0.35) : 0;
+        const sumupFees = (cardSales + totalDonations) * 0.0175;
 
         const feesBody = [
-            ['Frais PayPal (2.9% + 0.35€)', `${paypalFees.toFixed(2)}€`, `${(paypalSalesCount)} transactions`],
-            ['Frais Sumup (1.75%)', `${sumupFees.toFixed(2)}€`, `Cartes + Dons`],
-            ['Total Frais Estimés', `${(paypalFees + sumupFees).toFixed(2)}€`, 'Estimation'],
+            ['Frais PayPal (2.9% + 0.35€)', `${formatCurrency(paypalFees)}`, `${(paypalSalesCount)} transactions`],
+            ['Frais Sumup (1.75%)', `${formatCurrency(sumupFees)}`, `Cartes + Dons`],
+            ['Total Frais Estimés', `${formatCurrency(paypalFees + sumupFees)}`, 'Estimation'],
         ];
 
         autoTable(doc, {
@@ -265,7 +292,7 @@ export const generateAdvancedPDF = async (
         finalY = 15;
 
         // Top Produits
-        if (analytics.topProductsByQuantity.length > 0) {
+            if (topProductsByQuantity.length > 0) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(14);
             doc.setTextColor(0, 0, 0);
@@ -273,14 +300,14 @@ export const generateAdvancedPDF = async (
             doc.text('Top 5 Produits par Quantité', margin, finalY);
             finalY += 6;
 
-            autoTable(doc, {
+                autoTable(doc, {
                 startY: finalY,
                 head: [['Rang', 'Produit', 'Vendus', 'Chiffre d\'Affaires']],
-                body: analytics.topProductsByQuantity.slice(0, 5).map((p, i) => [
+                body: topProductsByQuantity.slice(0, 5).map((p, i) => [
                     `${i + 1}`,
                     p.name,
                     `${p.unitsSold}`,
-                    `${p.revenue.toFixed(2)}€`,
+                    `${formatCurrency(p.revenue)}`,
                 ]),
                 theme: 'grid',
                 headStyles: { fillColor: colors.success as [number, number, number], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica', fontSize: 10 },
@@ -293,7 +320,7 @@ export const generateAdvancedPDF = async (
         }
 
         // Top Produits par Profit (Pro only)
-        if (isPro && analytics.topProductsByProfit.length > 0) {
+        if (isPro && topProductsByProfit.length > 0) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(14);
             doc.setTextColor(0, 0, 0);
@@ -301,14 +328,14 @@ export const generateAdvancedPDF = async (
             doc.text('Top 5 Produits par Profit', margin, finalY);
             finalY += 6;
 
-            autoTable(doc, {
+                autoTable(doc, {
                 startY: finalY,
                 head: [['Rang', 'Produit', 'Profit Net', 'Marge %']],
-                body: analytics.topProductsByProfit.slice(0, 5).map((p, i) => [
+                body: topProductsByProfit.slice(0, 5).map((p, i) => [
                     `${i + 1}`,
                     p.name,
-                    `${p.totalProfit.toFixed(2)}€`,
-                    `${((p.totalProfit / p.revenue) * 100).toFixed(1)}%`,
+                    `${formatCurrency(p.totalProfit)}`,
+                    `${formatPercentage(p.revenue > 0 ? ((p.totalProfit / p.revenue) * 100) : 0)}`,
                 ]),
                 theme: 'grid',
                 headStyles: { fillColor: colors.warning as [number, number, number], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica', fontSize: 10 },
@@ -321,7 +348,7 @@ export const generateAdvancedPDF = async (
         }
 
         // Catégories
-        if (analytics.salesByCategory.length > 0) {
+        if (salesByCategory.length > 0) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(14);
             doc.setTextColor(0, 0, 0);
@@ -332,11 +359,11 @@ export const generateAdvancedPDF = async (
             autoTable(doc, {
                 startY: finalY,
                 head: [['Catégorie', 'Revenu', 'Nombre de Ventes', 'Panier Moyen']],
-                body: analytics.salesByCategory.map(c => [
+                body: salesByCategory.map(c => [
                     c.name,
-                    `${c.revenue.toFixed(2)}€`,
+                    `${formatCurrency(c.revenue)}`,
                     `${c.count}`,
-                    `${(c.revenue / c.count).toFixed(2)}€`,
+                    `${c.count > 0 ? formatCurrency(c.revenue / c.count) : formatCurrency(0)}`,
                 ]),
                 theme: 'grid',
                 headStyles: { fillColor: colors.primary as [number, number, number], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica', fontSize: 10 },
@@ -349,7 +376,7 @@ export const generateAdvancedPDF = async (
         }
 
         // Historique des ventes détaillé
-        if (analytics.validSales.length > 0) {
+        if (validSales.length > 0) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(14);
             doc.setTextColor(0, 0, 0);
@@ -358,7 +385,7 @@ export const generateAdvancedPDF = async (
             finalY += 6;
 
             const maxSalesInPDF = 50; // Limiter à 50 ventes pour ne pas rendre le PDF trop lourd
-            const salesData = analytics.validSales.slice(0, maxSalesInPDF).map((sale, idx) => {
+            const salesData = validSales.slice(0, maxSalesInPDF).map((sale, idx) => {
                 const itemsSummary = sale.items.map(i => `${i.quantity}x ${i.name}`).join(', ').substring(0, 40);
                 const cogs = sale.items.reduce((sum, i) => sum + ((i.purchasePrice || 0) * i.quantity), 0);
                 const paypalFeeForSale = sale.paymentMethod === 'paypal' ? (sale.total * 0.029) + 0.35 : 0;
@@ -371,9 +398,9 @@ export const generateAdvancedPDF = async (
                     `${idx + 1}`,
                     new Date(sale.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
                     itemsSummary,
-                    `${sale.total.toFixed(2)}€`,
-                    `${totalFees.toFixed(2)}€`,
-                    `${netProfit.toFixed(2)}€`,
+                    `${formatCurrency(sale.total)}`,
+                    `${formatCurrency(totalFees)}`,
+                    `${formatCurrency(netProfit)}`,
                     sale.paymentMethod,
                 ];
             });

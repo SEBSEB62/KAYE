@@ -2,6 +2,7 @@
 import React, { useState, memo } from 'react';
 import { useBuvette } from '../hooks/useBuvette';
 import NumericKeypad from '../components/NumericKeypad';
+import { formatCurrency } from '../utils/formatting';
 import { BanknotesIcon, CreditCardIcon } from '../components/Icons';
 
 const DonationsPage: React.FC = () => {
@@ -54,7 +55,7 @@ const DonationsPage: React.FC = () => {
             
             <div className="bg-[#2a2a2a] border-2 border-amber-500/50 p-6 rounded-2xl shadow-lg text-center">
                 <h3 className="font-bold text-xl text-slate-200">Total Reçu</h3>
-                <p className="text-4xl font-display text-amber-300 tracking-wider mt-1">{totalDonations.toFixed(2)}€</p>
+                <p className="text-4xl font-display text-amber-300 tracking-wider mt-1">{formatCurrency(totalDonations)}</p>
                 <p className="mt-2 text-amber-200/80">Merci pour votre générosité ! 💖</p>
             </div>
 
@@ -112,7 +113,7 @@ const DonationsPage: React.FC = () => {
                                     <p className="text-xs text-slate-400">{new Date(donation.date).toLocaleString('fr-FR')}</p>
                                 </div>
                                 <div className="text-right flex flex-col items-end space-y-1">
-                                     <p className="font-bold text-lg text-emerald-400">+{donation.amount.toFixed(2)}€</p>
+                                     <p className="font-bold text-lg text-emerald-400">+{formatCurrency(donation.amount)}</p>
                                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                                         donation.paymentMethod === 'card' 
                                             ? 'bg-sky-900/50 text-sky-300' 

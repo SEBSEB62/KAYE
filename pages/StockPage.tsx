@@ -7,6 +7,7 @@ import ProductForm from '../components/ProductForm';
 import NumericKeypad from '../components/NumericKeypad';
 import { SearchIcon, ExclamationTriangleIcon, ArrowDownTrayIcon } from '../components/Icons';
 import ProductImage from '../components/ProductImage';
+import { formatCurrency } from '../utils/formatting';
 import StockHistoryModal from '../components/StockHistoryModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { useDebounce } from '../hooks/useDebounce';
@@ -260,8 +261,8 @@ const StockPage: React.FC = () => {
                                         Stock: {p.stock}
                                     </p>
                                     <div className="mt-2 text-sm">
-                                        <span className={`font-semibold ${p.price < totalCost ? 'text-red-400' : 'text-slate-300'}`}>Prix: {p.price.toFixed(2)}€</span>
-                                        <div className="text-slate-500 dark:text-slate-400 mt-1">Coût Matériel: {materialCost.toFixed(2)}€ | Coût Main d'œuvre: {laborCost.toFixed(2)}€</div>
+                                        <span className={`font-semibold ${p.price < totalCost ? 'text-red-400' : 'text-slate-300'}`}>Prix: {formatCurrency(p.price)}</span>
+                                        <div className="text-slate-500 dark:text-slate-400 mt-1">Coût Matériel: {formatCurrency(materialCost)} | Coût Main d'œuvre: {formatCurrency(laborCost)}</div>
                                         {p.price < totalCost && <div className="mt-1 text-sm text-red-500 font-bold">Vente à perte !</div>}
                                     </div>
                                 </div>
