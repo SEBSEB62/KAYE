@@ -1,0 +1,1 @@
+function e(r,t=2,n="fr-FR"){const o=Number(r)||0;try{return o.toLocaleString(n,{minimumFractionDigits:t,maximumFractionDigits:t})+"€"}catch{return o.toFixed(t)+"€"}}function i(r,t=1){return(Number(r)||0).toFixed(t)+"%"}export{i as a,e as f};
