@@ -89,16 +89,27 @@ const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
     }, [sales, products]);
 
     // Apply font setting to headings. appFont is 'modern' | 'elegant' | 'handwritten'
-    const headingFontClass = settings.appFont === 'elegant' ? 'font-display' 
-                           : settings.appFont === 'handwritten' ? 'font-handwritten' 
-                           : 'font-sans';
+    const headingFontClass = useMemo(() => {
+        if (settings.appFont === 'elegant') return 'font-display';
+        if (settings.appFont === 'handwritten') return 'font-handwritten';
+        return 'font-sans';
+    }, [settings.appFont]);
 
-    // Derived calculations (declare before return to avoid reference errors)
-    const netEstimated = netRevenueAfterFees || 0;
-    const feesEstimated = estimatedFees || 0;
-    const totalRev = totalRevenue || 0;
-    const urssafRate = settings.urssafRate ?? 0;
-    const urssafCharge = (totalRev * (urssafRate / 100));
+    // CRUCIAL: All derived calculations MUST be in useMemo to prevent Temporal Dead Zone (TDZ) errors
+    const { netEstimated, feesEstimated, urssafRate, urssafCharge } = useMemo(() => {
+        const net = netRevenueAfterFees ?? 0;
+        const fees = estimatedFees ?? 0;
+        const total = totalRevenue ?? 0;
+        const rate = settings.urssafRate ?? 0;
+        const charge = total * (rate / 100);
+        
+        return {
+            netEstimated: net,
+            feesEstimated: fees,
+            urssafRate: rate,
+            urssafCharge: charge,
+        };
+    }, [netRevenueAfterFees, estimatedFees, totalRevenue, settings.urssafRate]);
 
     return (
         <div className="flex flex-col h-full space-y-6 justify-center max-w-xl mx-auto w-full">
