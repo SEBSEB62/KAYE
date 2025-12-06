@@ -7,6 +7,50 @@ import { formatCurrency, formatPercentage } from '../utils/formatting';
 import { ArrowTrendingUpIcon, ReceiptPercentIcon, WalletIcon } from '../components/Icons';
 import ProductImage from '../components/ProductImage';
 
+// Simple inline loading placeholder used when initial data isn't ready
+const Loading: React.FC = () => (
+    <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+            <div className="text-3xl">Chargement…</div>
+        </div>
+    </div>
+);
+
+// Helpers extracted outside the component (pure functions)
+function computeTodayStats(sales: any[], products: Product[]) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todaySales = (sales || []).filter(sale => new Date(sale.date) >= today && !sale.refunded);
+    const revenue = todaySales.reduce((sum, sale) => sum + (sale.total || 0), 0);
+
+    let topProduct: (Product & { unitsSold: number }) | null = null;
+    if (todaySales.length > 0) {
+        const productCounts = todaySales
+            .flatMap(s => s.items || [])
+            .reduce((acc: Record<string, number>, item: any) => {
+                acc[item.id] = (acc[item.id] || 0) + (item.quantity || 0);
+                return acc;
+            }, {} as Record<string, number>);
+
+        const topProductId = Object.keys(productCounts).reduce((a, b) => productCounts[a] > productCounts[b] ? a : b, '');
+        const topProductDetails = (products || []).find(p => p.id === topProductId);
+        if (topProductDetails) topProduct = { ...topProductDetails, unitsSold: productCounts[topProductId] };
+    }
+
+    return {
+        revenue,
+        salesCount: todaySales.length,
+        topProduct,
+    };
+}
+
+function computeUrssafCharge(totalRevenue: number, rate: number) {
+    const total = totalRevenue || 0;
+    const r = rate || 0;
+    return total * (r / 100);
+}
+
 interface HomePageProps {
   setPage: (page: Page) => void;
 }
@@ -54,62 +98,29 @@ const TopProductCard: React.FC<{ product: (Product & { unitsSold: number }) | nu
 );
 
 const HomePage: React.FC<HomePageProps> = ({ setPage }) => {
+    // Hooks (must be declared first)
     const { settings, sales, donations, manualRefunds, safeDeposits, products, cashOuts, labels } = useBuvette();
     const { estimatedFees, netRevenueAfterFees, totalRevenue } = useEventAnalytics(sales, donations, manualRefunds, safeDeposits, cashOuts, products, settings, null);
 
-    const todayStats = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    // Defensive early return while data loads
+    if (!sales || !products || !settings || !Array.isArray(sales)) return <Loading />;
 
-        const todaySales = sales.filter(sale => new Date(sale.date) >= today && !sale.refunded);
-        const revenue = todaySales.reduce((sum, sale) => sum + sale.total, 0);
-        
-        let topProduct: (Product & { unitsSold: number }) | null = null;
-        if (todaySales.length > 0) {
-            const productCounts = todaySales
-                .flatMap(s => s.items)
-                .reduce((acc, item) => {
-                    acc[item.id] = (acc[item.id] || 0) + item.quantity;
-                    return acc;
-                }, {} as Record<string, number>);
+    // Memoized computations using pure helpers
+    const todayStats = useMemo(() => computeTodayStats(sales || [], products || []), [sales, products]);
 
-            const topProductId = Object.keys(productCounts).reduce((a, b) => productCounts[a] > productCounts[b] ? a : b, '');
-            
-            const topProductDetails = products.find(p => p.id === topProductId);
-            if (topProductDetails) {
-                topProduct = { ...topProductDetails, unitsSold: productCounts[topProductId] };
-            }
-        }
-        
-        return {
-            revenue,
-            salesCount: todaySales.length,
-            topProduct,
-        };
-    }, [sales, products]);
-
-    // Apply font setting to headings. appFont is 'modern' | 'elegant' | 'handwritten'
     const headingFontClass = useMemo(() => {
-        if (settings.appFont === 'elegant') return 'font-display';
-        if (settings.appFont === 'handwritten') return 'font-handwritten';
+        if (settings?.appFont === 'elegant') return 'font-display';
+        if (settings?.appFont === 'handwritten') return 'font-handwritten';
         return 'font-sans';
-    }, [settings.appFont]);
+    }, [settings?.appFont]);
 
-    // CRUCIAL: All derived calculations MUST be in useMemo to prevent Temporal Dead Zone (TDZ) errors
     const { netEstimated, feesEstimated, urssafRate, urssafCharge } = useMemo(() => {
         const net = netRevenueAfterFees ?? 0;
         const fees = estimatedFees ?? 0;
-        const total = totalRevenue ?? 0;
-        const rate = settings.urssafRate ?? 0;
-        const charge = total * (rate / 100);
-        
-        return {
-            netEstimated: net,
-            feesEstimated: fees,
-            urssafRate: rate,
-            urssafCharge: charge,
-        };
-    }, [netRevenueAfterFees, estimatedFees, totalRevenue, settings.urssafRate]);
+        const rate = settings?.urssafRate ?? 0;
+        const charge = computeUrssafCharge(totalRevenue ?? 0, rate);
+        return { netEstimated: net, feesEstimated: fees, urssafRate: rate, urssafCharge: charge };
+    }, [netRevenueAfterFees, estimatedFees, totalRevenue, settings?.urssafRate]);
 
     return (
         <div className="flex flex-col h-full space-y-6 justify-center max-w-xl mx-auto w-full">

@@ -236,6 +236,13 @@ const HistoryList: React.FC<{ sales: SaleRecord[]; onDelete: (sale: SaleRecord) 
     );
 };
 
+// Lightweight loading placeholder
+const Loading: React.FC = () => (
+    <div className="flex items-center justify-center h-full">
+        <div className="text-center text-slate-500">Chargement…</div>
+    </div>
+);
+
 const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
     const { sales, donations, manualRefunds, safeDeposits, products, settings, subscriptionPlan, cashOuts, showToast, deleteSale } = useBuvette();
     const [period, setPeriod] = useState<Period>('7d');
@@ -261,6 +268,7 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
     }, [period]);
     
     const analytics = useEventAnalytics(sales, donations, manualRefunds, safeDeposits, cashOuts, products, settings, dateRange);
+    if (!analytics) return <Loading />;
     const isPro = subscriptionPlan === SubscriptionPlan.PRO;
     const isStandardOrPro = subscriptionPlan === SubscriptionPlan.STANDARD || subscriptionPlan === SubscriptionPlan.PRO;
 
@@ -317,17 +325,38 @@ const StatsPage: React.FC<StatsPageProps> = ({ setPage }) => {
         }
         try {
             const doc = new jsPDF();
-            
-            // Préparer les données pour le PDF
+            // Defensive guards: compute safe numeric locals from analytics
+            const safeAnalytics = analytics || ({} as any);
             const pdfAnalytics = {
-                ...analytics,
+                ...safeAnalytics,
+                totalRevenue: safeAnalytics.totalRevenue ?? 0,
+                totalDonations: safeAnalytics.totalDonations ?? 0,
+                estimatedFees: safeAnalytics.estimatedFees ?? 0,
+                netRevenueAfterFees: safeAnalytics.netRevenueAfterFees ?? 0,
+                beneficeNet: safeAnalytics.beneficeNet ?? 0,
+                totalCostOfGoods: safeAnalytics.totalCostOfGoods ?? 0,
+                grossProfit: safeAnalytics.grossProfit ?? 0,
+                cashSales: safeAnalytics.cashSales ?? 0,
+                cardSales: safeAnalytics.cardSales ?? 0,
+                paypalSales: safeAnalytics.paypalSales ?? 0,
+                checkSales: safeAnalytics.checkSales ?? 0,
+                weroSales: safeAnalytics.weroSales ?? 0,
+                totalRemboursements: safeAnalytics.totalRemboursements ?? 0,
+                totalCashOuts: safeAnalytics.totalCashOuts ?? 0,
+                caisseFinaleEspeces: safeAnalytics.caisseFinaleEspeces ?? 0,
+                totalEncaissements: safeAnalytics.totalEncaissements ?? 0,
+                validSales: safeAnalytics.validSales ?? [],
+                topProductsByQuantity: safeAnalytics.topProductsByQuantity ?? [],
+                topProductsByProfit: safeAnalytics.topProductsByProfit ?? [],
+                salesByCategory: safeAnalytics.salesByCategory ?? [],
+                chartData: safeAnalytics.chartData ?? [],
                 paymentStats: {
-                    cash: analytics.cashSales,
-                    card: analytics.cardSales,
+                    cash: safeAnalytics.cashSales ?? 0,
+                    card: safeAnalytics.cardSales ?? 0,
                     token: 0,
-                    check: analytics.checkSales,
-                    paypal: analytics.paypalSales,
-                    wero: analytics.weroSales,
+                    check: safeAnalytics.checkSales ?? 0,
+                    paypal: safeAnalytics.paypalSales ?? 0,
+                    wero: safeAnalytics.weroSales ?? 0,
                 }
             };
 
